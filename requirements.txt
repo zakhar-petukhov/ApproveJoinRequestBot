@@ -1,0 +1,15 @@
+asyncio==3.4.3
+beautifulsoup4==4.11.1
+cachetools==5.0.0
+certifi==2021.10.8
+charset-normalizer==2.0.12
+idna==3.3
+jsonpickle==2.1.0
+newthon==1.26.0
+peewee==3.14.10
+pyaes==1.6.1
+pyasn1==0.4.8
+requests==2.27.1
+rsa==4.8
+soupsieve==2.3.2.post1
+urllib3==1.26.9
