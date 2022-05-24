@@ -149,6 +149,52 @@ def get_currency(ru=False, uah=False, crypto=False, other=False):
 
         list_currency.append(item)
 
+        other_currencies = ["Solana", "GST", "BNB", "GST_BSC"]
+        for value in other_currencies:
+            item = cache_data.get(value, None)
+            if item is None:
+                if value == "Solana":
+                    url = "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=USD"
+                    request = requests.get(url, headers=headers)
+                    response = request.json()
+                    solana = response.get("solana")
+                    if solana is not None:
+                        price = solana["usd"]
+                        item = f"🔹 Solana: **{price}** "
+
+                elif value == "GST":
+                    url = "https://api.coingecko.com/api/v3/simple/price?ids=green-satoshi-token&vs_currencies=USD"
+                    request = requests.get(url, headers=headers)
+                    response = request.json()
+                    gst = response.get("green-satoshi-token")
+                    if gst is not None:
+                        price = gst["usd"]
+                        item = f"🔹 GST: **{price}** "
+
+                elif value == "BNB":
+                    url = "https://api.coingecko.com/api/v3/simple/price?ids=binancecoin&vs_currencies=USD"
+                    request = requests.get(url, headers=headers)
+                    response = request.json()
+                    binance_coin = response.get("binancecoin")
+                    if binance_coin is not None:
+                        price = binance_coin["usd"]
+                        item = f"🔹 BNB: **{price}** "
+
+                elif value == "GST_BSC":
+                    url = "https://api.coingecko.com/api/v3/simple/price?ids=green-satoshi-token-bsc&vs_currencies=USD"
+                    request = requests.get(url, headers=headers)
+                    response = request.json()
+                    gst_bsc = response.get("green-satoshi-token-bsc")
+                    if gst_bsc is not None:
+                        price = gst_bsc["usd"]
+                        item = f"🔹 GST_BSC: **{price}** "
+
+                cache_data[value] = item
+                list_currency.append(item)
+
+            else:
+                list_currency.append(item)
+
     return '\n'.join(list_currency)
 
 
@@ -184,13 +230,13 @@ class Setting:
 
         except FileNotFoundError:
             if name == 'mail.json':
-                data = {'text': 'None', 'media': 'None', 'content': 'None', 'button': 'None', 'preview': 'False', 'entities': 'None'}
+                data = {'text': 'None', 'media': 'None', 'content': 'None', 'button': 'None', 'preview': 'False',
+                        'entities': 'None'}
 
             file = open(name, 'w')
             file.write(json.dumps(data, indent=4, ensure_ascii=False))
 
         return data
-
 
     def change_value(self, name, key, value):
         """Change value of JSON file"""
@@ -199,7 +245,6 @@ class Setting:
         data[key] = value
         file = open(name, 'w')
         file.write(json.dumps(data, indent=4, ensure_ascii=False))
-
 
     def mail_text(self):
         """Text for admin mail info"""
@@ -220,7 +265,6 @@ class Setting:
             else:
                 video = '❌'
                 photo = '❌'
-
 
         text = f"""
 <i>Сообщение для массовой рассылки:</i>
@@ -245,7 +289,6 @@ class Setting:
 """
         return text
 
-
     def switch_preview(self):
         """Mail preview On/Off"""
 
@@ -257,7 +300,6 @@ class Setting:
         elif data['preview'] == 'True':
             self.change_value('mail.json', 'preview', 'False')
 
-
     def clear_mail(self):
         """Mail clear"""
 
@@ -267,7 +309,6 @@ class Setting:
         self.change_value('mail.json', 'button', 'None')
         self.change_value('mail.json', 'preview', 'False')
         self.change_value('mail.json', 'entities', 'None')
-
 
     async def send_mail(self, preview=False, admin_id=None):
         """Send mail"""
@@ -320,13 +361,15 @@ class Setting:
                     user_id = user['user_id']
 
                     try:
-                        await bot.send_message(user_id, text, formatting_entities=entities, link_preview=web_preview, buttons=keyboard)
+                        await bot.send_message(user_id, text, formatting_entities=entities, link_preview=web_preview,
+                                               buttons=keyboard)
                         mail_sent += 1
 
                     except:
-                        User.update(active = False).where(User.user_id == user_id).execute()      
+                        User.update(active=False).where(User.user_id == user_id).execute()
             else:
-                await bot.send_message(admin_id, text, formatting_entities=entities, link_preview=web_preview, buttons=keyboard)
+                await bot.send_message(admin_id, text, formatting_entities=entities, link_preview=web_preview,
+                                       buttons=keyboard)
 
         else:
             file = media.split(':')[1]
@@ -337,25 +380,26 @@ class Setting:
             if preview == False:
                 for user in users:
                     user_id = user['user_id']
-                    
+
                     try:
                         await bot.send_file(user_id, file, formatting_entities=entities, caption=text, buttons=keyboard)
                         mail_sent += 1
 
                     except:
-                        User.update(active = False).where(User.user_id == user_id).execute()    
+                        User.update(active=False).where(User.user_id == user_id).execute()
             else:
                 await bot.send_file(admin_id, file, formatting_entities=entities, caption=text, buttons=keyboard)
 
         if preview == False:
             blocked_users = len_users - mail_sent
 
-            await bot.send_message(admin_id, f'Сообщение было успешно отправлено:\n\nПользователи, получившие сообщение: <b>{mail_sent}</b>\nУдаленные пользователи, которые заблокировали бота: <b>{blocked_users}</b>', parse_mode='html')
-
+            await bot.send_message(admin_id,
+                                   f'Сообщение было успешно отправлено:\n\nПользователи, получившие сообщение: <b>{mail_sent}</b>\nУдаленные пользователи, которые заблокировали бота: <b>{blocked_users}</b>',
+                                   parse_mode='html')
 
     async def download_file(self, file_id):
         """Download file from Telegram server"""
- 
+
         file_name = await bot.download_media(file_id)
         file = open(file_name, 'rb')
 
@@ -365,7 +409,6 @@ class Setting:
 
         return file
 
-
     async def upload_telegraph(self, file_id, content_type):
         """Upload file to Telegraph"""
 
@@ -374,11 +417,10 @@ class Setting:
         contents = {'photo': 'image/jpg', 'animation': 'image/gif', 'video': 'video/mp4'}
         content = contents[content_type]
 
-        data = requests.post('https://telegra.ph/upload', files={'file': ('file', file, content)}).json() 
+        data = requests.post('https://telegra.ph/upload', files={'file': ('file', file, content)}).json()
         url = "https://telegra.ph" + data[0]['src']
 
         return url
-
 
     def load_entities(self):
         """Load entities from mail.json"""
@@ -390,9 +432,8 @@ class Setting:
             entities_data = json.loads(entities)
         else:
             entities_data = []
-        
-        return entities_data
 
+        return entities_data
 
     def save_entities(self, entities):
         """Save entities to mail.json"""
@@ -401,7 +442,6 @@ class Setting:
         entities = str(entities).replace("None", 'null')
 
         self.change_value('mail.json', 'entities', str(entities))
-
 
     def add_offset(self):
         """Add offset to all formating in mail.json"""
@@ -413,7 +453,6 @@ class Setting:
 
         self.save_entities(entities)
 
-
     def add_url(self, url):
         """Add url content mail.json"""
 
@@ -422,16 +461,14 @@ class Setting:
 
         self.save_entities(entities)
 
-
     def change_url(self, url):
         """Change url content mail.json"""
 
         entities = self.load_entities()
-        
+
         entities[-1]['url'] = url
 
         self.save_entities(entities)
-
 
     def add_wordjoiner(self):
         """Add wordjoiner to text mail.json"""
@@ -441,7 +478,6 @@ class Setting:
         text = '⁠' + text
 
         self.change_value('mail.json', 'text', text)
-
 
     async def add_content(self, file_id, content_type):
         """Add content to mail.json"""
