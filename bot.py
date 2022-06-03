@@ -41,8 +41,6 @@ async def start(event):
     ]
     text = """
 Привет! Этот бот показывает актуальный курс фиатных валют и криптовалют.
-
-Для использования бота необходима подписка на @idei_biznes.
         """
     await event.respond(text, buttons=keyboard)
     raise events.StopPropagation
@@ -53,11 +51,11 @@ async def button_currency(event):
     user_id = event.message.peer_id.user_id
     button_text = event.raw_text
 
-    try:
-        await bot.get_permissions(config.SUBSCRIBE_CHANNEL, user_id)
-    except:
-        await event.respond("Для использования бота необходима подписка на @idei_biznes.")
-        return
+    # try:
+    #     await bot.get_permissions(config.SUBSCRIBE_CHANNEL, user_id)
+    # except:
+    #     await event.respond("Для использования бота необходима подписка на @idei_biznes.")
+    #     return
 
     if button_text == "🇷🇺 RUB":
         text = f"""
@@ -79,6 +77,7 @@ async def button_currency(event):
         await event.respond(get_currency(other=True))
 
     elif button_text == "💲 Crypto":
+        await bot.send_message(user_id, "Загружаем...")
         await event.respond(get_currency(crypto=True))
 
     raise events.StopPropagation
@@ -183,10 +182,10 @@ async def handler(event):
     if state is None:
         if text != '':
             keyboard_cancel = [
-                    [
-                        Button.text("Отмена", resize=True),
-                    ]
+                [
+                    Button.text("Отмена", resize=True),
                 ]
+            ]
 
             if text == '/admin':
                 return
@@ -208,7 +207,8 @@ async def handler(event):
                 conversation_state[who] = State.WAIT_CONTENT
 
             elif text == '🌍 Изменить кнопку':
-                await event.respond('Отправьте текст для кнопки и ссылку. Например Google|google.ru:', buttons=keyboard_cancel)
+                await event.respond('Отправьте текст для кнопки и ссылку. Например Google|google.ru:',
+                                    buttons=keyboard_cancel)
                 conversation_state[who] = State.WAIT_BUTTON
 
             elif text == '🖥 Вкл/выкл предпросмотр':
@@ -324,4 +324,3 @@ async def handler(event):
 
         del conversation_state[who]
         await mailing(event)
-    

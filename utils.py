@@ -1,6 +1,7 @@
 import json
 import os
 from datetime import datetime, timedelta
+from multiprocessing.pool import ThreadPool
 
 import jsonpickle
 import requests
@@ -27,18 +28,18 @@ def get_currency(ru=False, uah=False, crypto=False, other=False):
             "EUR": 'https://finance.yahoo.com/quote/EURUAH=X?.tsrc=applewf',
         }
 
-        for key, value in urls.items():
-            item = cache_data.get(f"{key}/UAH", None)
+        for name, url in urls.items():
+            item = cache_data.get(f"{name}/UAH", None)
             if item is None:
-                price, change = parse_body(value, headers)
-                if key == "USD":
+                _, price, change = parse_body(url, name, headers)
+                if name == "USD":
                     line = f"🇺🇸 USD/UAH **{price}** __{change}__"
                     list_currency.append(line)
                 else:
                     line = f"🇪🇺 EUR/UAH **{price}** __{change}__"
                     list_currency.append(line)
 
-                cache_data[f"{key}/UAH"] = line
+                cache_data[f"{name}/UAH"] = line
 
             else:
                 list_currency.append(item)
@@ -49,18 +50,18 @@ def get_currency(ru=False, uah=False, crypto=False, other=False):
             "EUR": 'https://finance.yahoo.com/quote/EURRUB=X?.tsrc=applewf',
         }
 
-        for key, value in urls.items():
-            item = cache_data.get(f"{key}/RUB", None)
+        for name, url in urls.items():
+            item = cache_data.get(f"{name}/RUB", None)
             if item is None:
-                price, change = parse_body(value, headers)
-                if key == "USD":
+                _, price, change = parse_body(url, name, headers)
+                if name == "USD":
                     line = f"🇺🇸 USD/RUB **{price}** __{change}__"
                     list_currency.append(line)
                 else:
                     line = f"🇪🇺 EUR/RUB **{price}** __{change}__"
                     list_currency.append(line)
 
-                cache_data[f"{key}/RUB"] = line
+                cache_data[f"{name}/RUB"] = line
 
             else:
                 list_currency.append(item)
@@ -74,138 +75,107 @@ def get_currency(ru=False, uah=False, crypto=False, other=False):
             "CNY/USD": 'https://finance.yahoo.com/quote/CNYUSD=X?.tsrc=applewf',
         }
 
-        for key, value in urls.items():
-            item = cache_data.get(key, None)
+        for name, url in urls.items():
+            item = cache_data.get(url, None)
             if item is None:
-                price, change = parse_body(value, headers)
+                _, price, change = parse_body(url, name, headers)
                 line = ""
 
-                if key == "EUR/USD":
-                    line = f"🇪🇺 {key} **{price}** __{change}__"
+                if name == "EUR/USD":
+                    line = f"🇪🇺 {name} **{price}** __{change}__"
                     list_currency.append(line)
-                elif key == "GBP/USD":
-                    line = f"🇬🇧 {key} **{price}** __{change}__"
+                elif name == "GBP/USD":
+                    line = f"🇬🇧 {name} **{price}** __{change}__"
                     list_currency.append(line)
-                elif key == "CHF/USD":
-                    line = f"🇨🇭 {key} **{price}** __{change}__"
+                elif name == "CHF/USD":
+                    line = f"🇨🇭 {name} **{price}** __{change}__"
                     list_currency.append(line)
-                elif key == "JPY/USD":
-                    line = f"🇯🇵 {key} **{price}** __{change}__"
+                elif name == "JPY/USD":
+                    line = f"🇯🇵 {name} **{price}** __{change}__"
                     list_currency.append(line)
-                elif key == "CNY/USD":
-                    line = f"🇨🇳 {key} **{price}** __{change}__"
+                elif name == "CNY/USD":
+                    line = f"🇨🇳 {name} **{price}** __{change}__"
                     list_currency.append(line)
 
-                cache_data[key] = line
+                cache_data[name] = line
 
             else:
                 list_currency.append(item)
 
     elif crypto:
-        currencies = ["Bitcoin USD", "Ethereum USD", "Dogecoin USD", "Terra USD"]
+        pool = ThreadPool(processes=1)
 
-        for value in currencies:
-            item = cache_data.get(value, None)
+        urls = {
+            "Bitcoin USD": 'https://finance.yahoo.com/quote/BTC-USD?p=BTC-USD&.tsrc=fin-srch',
+            "Ethereum USD": 'https://finance.yahoo.com/quote/ETH-USD?p=ETH-USD&.tsrc=fin-srch',
+            "USDT": 'https://www.bestchange.net/ruble-cash-to-tether-trc20.html',
+            "Dogecoin USD": 'https://finance.yahoo.com/quote/DOGE-USD?p=DOGE-USD&.tsrc=fin-srch',
+            "Terra USD": 'https://finance.yahoo.com/quote/DOGE-USD?p=DOGE-USD&.tsrc=fin-srch',
+            "GMT": 'https://finance.yahoo.com/quote/GMT3-USD?p=GMT3-USD&.tsrc=fin-srch',
+            "Solana": 'https://finance.yahoo.com/quote/SOL-USD?p=SOL-USD&.tsrc=fin-srch',
+            "GST": 'https://finance.yahoo.com/quote/GST2-USD?p=GST2-USD&.tsrc=fin-srch',
+            "BNB": 'https://finance.yahoo.com/quote/BNB-USD?p=BNB-USD&.tsrc=fin-srch ',
+            "GST_BSC": 'https://finance.yahoo.com/quote/GST3-USD?p=GST3-USD&.tsrc=fin-srch',
+        }
+
+        workers = []
+
+        for name, url in urls.items():
+            item = cache_data.get(name, None)
             if item is None:
-                list_currency = []
-                break
-            else:
-                list_currency.append(item)
-
-        if len(list_currency) == 0:
-            url = "https://finance.yahoo.com/cryptocurrencies/"
-            full_page = requests.get(url, headers=headers)
-            soup = BeautifulSoup(full_page.content, 'html.parser')
-            blocks = soup.find_all("tr", {
-                "class": "simpTblRow"
-            })
-
-            for value in blocks:
-                title = value.find("td", {"aria-label": "Name"}).text
-
-                if title in currencies:
-                    price = value.find("td", {"aria-label": "Price (Intraday)"}).text
-                    change = value.find("td", {"aria-label": "% Change"}).text
-
-                    line = f"🔹 {title}: **{price}** __({change})__"
-                    cache_data[title] = line
-                    list_currency.append(line)
-
-        item = cache_data.get("USDT", None)
-        if item is None:
-            url = "https://www.bestchange.net/ruble-cash-to-tether-trc20.html"
-            full_page = requests.get(url, headers=headers)
-            soup = BeautifulSoup(full_page.content, 'html.parser')
-            blocks = soup.find_all("div", {
-                "class": "fs"
-            })
-            if len(blocks) > 0:
-                price = blocks[0].text.split()[0]
-            else:
-                price = 0
-
-            item = f"🔹 USDT: **{price}** __(лучший курс, по которому возможно купить)__"
-            cache_data["USDT"] = item
-
-        list_currency.append(item)
-
-        other_currencies = ["Solana", "GST", "BNB", "GST_BSC"]
-        for value in other_currencies:
-            item = cache_data.get(value, None)
-            if item is None:
-                if value == "Solana":
-                    url = "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=USD"
-                    request = requests.get(url, headers=headers)
-                    response = request.json()
-                    solana = response.get("solana")
-                    if solana is not None:
-                        price = solana["usd"]
-                        item = f"🔹 Solana: **{price}** "
-
-                elif value == "GST":
-                    url = "https://api.coingecko.com/api/v3/simple/price?ids=green-satoshi-token&vs_currencies=USD"
-                    request = requests.get(url, headers=headers)
-                    response = request.json()
-                    gst = response.get("green-satoshi-token")
-                    if gst is not None:
-                        price = gst["usd"]
-                        item = f"🔹 GST: **{price}** "
-
-                elif value == "BNB":
-                    url = "https://api.coingecko.com/api/v3/simple/price?ids=binancecoin&vs_currencies=USD"
-                    request = requests.get(url, headers=headers)
-                    response = request.json()
-                    binance_coin = response.get("binancecoin")
-                    if binance_coin is not None:
-                        price = binance_coin["usd"]
-                        item = f"🔹 BNB: **{price}** "
-
-                elif value == "GST_BSC":
-                    url = "https://api.coingecko.com/api/v3/simple/price?ids=green-satoshi-token-bsc&vs_currencies=USD"
-                    request = requests.get(url, headers=headers)
-                    response = request.json()
-                    gst_bsc = response.get("green-satoshi-token-bsc")
-                    if gst_bsc is not None:
-                        price = gst_bsc["usd"]
-                        item = f"🔹 GST_BSC: **{price}** "
-
-                cache_data[value] = item
-                list_currency.append(item)
+                if name == "USDT":
+                    workers.append(pool.apply_async(parse_body_USDT, (url, name, headers)))
+                else:
+                    workers.append(pool.apply_async(parse_body, (url, name, headers)))
 
             else:
                 list_currency.append(item)
 
-    return '\n'.join(list_currency)
+        for worker in workers:
+            name, price, change = worker.get()
+            if price == -100:
+                price = "Нет данных о цене"
+            if change == -100:
+                change = "Нет данных об изменении"
+
+            if name == "USDT":
+                line = f"🔹 USDT: **{price}** __(лучший курс, по которому возможно купить)__"
+            else:
+                line = f"🔹 {name} **{price}** __{change}__"
+
+            cache_data[name] = line
+            list_currency.append(line)
+
+    return '\n'.join(list_currency) + '\n\nАктуальные курсы: @bestchangenanbot'
 
 
-def parse_body(url, headers):
+def parse_body_USDT(url, name, headers):
     full_page = requests.get(url, headers=headers)
     soup = BeautifulSoup(full_page.content, 'html.parser')
-    price = soup.find("fin-streamer", {"data-field": "regularMarketPrice", "data-test": "qsp-price"}).text
-    change = soup.find("fin-streamer", {"data-field": "regularMarketChangePercent",
-                                        "class": "Fw(500) Pstart(8px) Fz(24px)"}).text
+    blocks = soup.find_all("div", {
+        "class": "fs"
+    })
+    if len(blocks) > 0:
+        price = blocks[0].text.split()[0]
+    else:
+        price = 0
 
-    return price, change
+    return name, price, 0
+
+
+def parse_body(url, name, headers):
+    full_page = requests.get(url, headers=headers)
+    soup = BeautifulSoup(full_page.content, 'html.parser')
+    price = -100
+    change = -100
+    try:
+        price = soup.find("fin-streamer", {"data-field": "regularMarketPrice", "data-test": "qsp-price"}).text
+        change = soup.find("fin-streamer", {"data-field": "regularMarketChangePercent",
+                                            "class": "Fw(500) Pstart(8px) Fz(24px)"}).text
+    except Exception as e:
+        print(e)
+
+    return name, price, change
 
 
 def get_or_create_user(who):
