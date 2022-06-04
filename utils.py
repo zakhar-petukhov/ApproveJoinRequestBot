@@ -110,7 +110,7 @@ def get_currency(ru=False, uah=False, crypto=False, other=False):
             "Ethereum USD": 'https://finance.yahoo.com/quote/ETH-USD?p=ETH-USD&.tsrc=fin-srch',
             "USDT": 'https://www.bestchange.net/ruble-cash-to-tether-trc20.html',
             "Dogecoin USD": 'https://finance.yahoo.com/quote/DOGE-USD?p=DOGE-USD&.tsrc=fin-srch',
-            "Terra USD": 'https://finance.yahoo.com/quote/DOGE-USD?p=DOGE-USD&.tsrc=fin-srch',
+            "Terra USD": 'https://finance.yahoo.com/quote/UST-USD?p=UST-USD&.tsrc=fin-srch',
             "GMT": 'https://finance.yahoo.com/quote/GMT3-USD?p=GMT3-USD&.tsrc=fin-srch',
             "Solana": 'https://finance.yahoo.com/quote/SOL-USD?p=SOL-USD&.tsrc=fin-srch',
             "GST": 'https://finance.yahoo.com/quote/GST2-USD?p=GST2-USD&.tsrc=fin-srch',
