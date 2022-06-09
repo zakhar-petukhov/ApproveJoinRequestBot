@@ -326,7 +326,7 @@ class Setting:
         mail_sent = 0
 
         if media == 'None':
-            if preview == False:
+            if preview is False:
                 for user in users:
                     user_id = user['user_id']
 
@@ -342,25 +342,25 @@ class Setting:
                                        buttons=keyboard)
 
         else:
-            file = media.split(':')[1]
+            path = media.split(':')[1]
+            with open(path, 'rb') as f:
+                file = f.read()
 
-            if 'photo:' in media:
-                file = open(file, 'rb')
+                if preview is False:
+                    for user in users:
+                        user_id = user['user_id']
+                        try:
+                            await bot.send_file(user_id, file, formatting_entities=entities, caption=text,
+                                                buttons=keyboard,
+                                                allow_cache=False)
+                            mail_sent += 1
 
-            if preview == False:
-                for user in users:
-                    user_id = user['user_id']
+                        except:
+                            User.update(active=False).where(User.user_id == user_id).execute()
+                else:
+                    await bot.send_file(admin_id, file, formatting_entities=entities, caption=text, buttons=keyboard)
 
-                    try:
-                        await bot.send_file(user_id, file, formatting_entities=entities, caption=text, buttons=keyboard)
-                        mail_sent += 1
-
-                    except:
-                        User.update(active=False).where(User.user_id == user_id).execute()
-            else:
-                await bot.send_file(admin_id, file, formatting_entities=entities, caption=text, buttons=keyboard)
-
-        if preview == False:
+        if preview is False:
             blocked_users = len_users - mail_sent
 
             await bot.send_message(admin_id,
@@ -389,6 +389,7 @@ class Setting:
 
         data = requests.post('https://telegra.ph/upload', files={'file': ('file', file, content)}).json()
         url = "https://telegra.ph" + data[0]['src']
+        file.close()
 
         return url
 

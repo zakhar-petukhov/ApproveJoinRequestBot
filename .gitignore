@@ -1,9 +1,12 @@
 env/
+.idea/
+venv/
 __pycache__/
 
 bot.session
 utils_bot.session
-
+bot.session-journal
+utils_bot.session-journal
 
 config.py
 db.sqlite3
