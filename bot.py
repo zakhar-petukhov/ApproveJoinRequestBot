@@ -77,7 +77,6 @@ async def button_currency(event):
         await event.respond(get_currency(other=True))
 
     elif button_text == "💲 Crypto":
-        await bot.send_message(user_id, "Загружаем...")
         await event.respond(get_currency(crypto=True))
 
     raise events.StopPropagation
