@@ -6,7 +6,7 @@ from telethon.tl.types import UpdateBotChatInviteRequester
 
 import config
 from models import User
-from utils import Setting, get_currency, get_or_create_user
+from utils import Setting, get_currency, get_or_create_user, cache_data
 
 admins = [594400511, 1260871881, 149031756, 583525749, 952644352]
 
@@ -77,6 +77,9 @@ async def button_currency(event):
         await event.respond(get_currency(other=True))
 
     elif button_text == "💲 Crypto":
+        item = cache_data.get(f"send_msg", None)
+        if item is None:
+            await event.respond("Собираю данные")
         await event.respond(get_currency(crypto=True))
 
     raise events.StopPropagation

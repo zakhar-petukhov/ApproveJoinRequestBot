@@ -1,5 +1,6 @@
 import json
 import os
+import platform
 from datetime import datetime, timedelta
 from multiprocessing.pool import ThreadPool
 
@@ -7,6 +8,7 @@ import jsonpickle
 import requests
 from bs4 import BeautifulSoup
 from cachetools import TTLCache
+from selenium import webdriver
 from telethon import Button, TelegramClient
 
 import config
@@ -31,7 +33,7 @@ def get_currency(ru=False, uah=False, crypto=False, other=False):
         for name, url in urls.items():
             item = cache_data.get(f"{name}/UAH", None)
             if item is None:
-                _, price, change = parse_body(url, name, headers)
+                _, price, change = parse_body(url, name)
                 if name == "USD":
                     line = f"🇺🇸 USD/UAH **{price}** __{change}__"
                     list_currency.append(line)
@@ -53,7 +55,7 @@ def get_currency(ru=False, uah=False, crypto=False, other=False):
         for name, url in urls.items():
             item = cache_data.get(f"{name}/RUB", None)
             if item is None:
-                _, price, change = parse_body(url, name, headers)
+                _, price, change = parse_body(url, name)
                 if name == "USD":
                     line = f"🇺🇸 USD/RUB **{price}** __{change}__"
                     list_currency.append(line)
@@ -78,7 +80,7 @@ def get_currency(ru=False, uah=False, crypto=False, other=False):
         for name, url in urls.items():
             item = cache_data.get(url, None)
             if item is None:
-                _, price, change = parse_body(url, name, headers)
+                _, price, change = parse_body(url, name)
                 line = ""
 
                 if name == "EUR/USD":
@@ -123,10 +125,11 @@ def get_currency(ru=False, uah=False, crypto=False, other=False):
         for name, url in urls.items():
             item = cache_data.get(name, None)
             if item is None or "Нет данных" in item:
+                cache_data["send_msg"] = True
                 if name == "USDT":
                     workers.append(pool.apply_async(parse_body_USDT, (url, name, headers)))
                 else:
-                    workers.append(pool.apply_async(parse_body, (url, name, headers)))
+                    workers.append(pool.apply_async(parse_body, (url, name)))
 
             else:
                 list_currency.append(item)
@@ -163,9 +166,20 @@ def parse_body_USDT(url, name, headers):
     return name, price, 0
 
 
-def parse_body(url, name, headers):
-    full_page = requests.get(url, headers=headers)
-    soup = BeautifulSoup(full_page.content, 'html.parser')
+def parse_body(url, name):
+    my_os = platform.system()
+    driver_path = r"./chromedriver_linux"
+    if my_os == "Darwin":
+        driver_path = r"./chromedriver_mac"
+
+    options = webdriver.ChromeOptions()
+    options.add_argument('headless')
+
+    driver = webdriver.Chrome(executable_path=driver_path, options=options)
+
+    driver.get(url)
+
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
     price = -100
     change = -100
     try:
@@ -174,6 +188,8 @@ def parse_body(url, name, headers):
                                             "class": "Fw(500) Pstart(8px) Fz(24px)"}).text
     except Exception as e:
         print(e)
+
+    driver.close()
 
     return name, price, change
 
