@@ -122,7 +122,7 @@ def get_currency(ru=False, uah=False, crypto=False, other=False):
 
         for name, url in urls.items():
             item = cache_data.get(name, None)
-            if item is None:
+            if item is None or "Нет данных" in item:
                 if name == "USDT":
                     workers.append(pool.apply_async(parse_body_USDT, (url, name, headers)))
                 else:
