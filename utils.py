@@ -24,8 +24,8 @@ def get_currency(ru=False, uah=False, crypto=False, other=False):
     list_currency = []
     if uah:
         urls = {
-            "USD": 'https://finance.yahoo.com/quote/USDUAH=X?.tsrc=applewf',
-            "EUR": 'https://finance.yahoo.com/quote/EURUAH=X?.tsrc=applewf',
+            "USD": 'https://query1.finance.yahoo.com/v8/finance/chart/USDUAH=X?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
+            "EUR": 'https://query1.finance.yahoo.com/v8/finance/chart/EURUAH=X?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
         }
 
         for name, url in urls.items():
@@ -46,8 +46,8 @@ def get_currency(ru=False, uah=False, crypto=False, other=False):
 
     elif ru:
         urls = {
-            "USD": 'https://finance.yahoo.com/quote/USDRUB=X?.tsrc=applewf',
-            "EUR": 'https://finance.yahoo.com/quote/EURRUB=X?.tsrc=applewf',
+            "USD": 'https://query1.finance.yahoo.com/v8/finance/chart/USDRUB=X?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
+            "EUR": 'https://query1.finance.yahoo.com/v8/finance/chart/EURRUB=X?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
         }
 
         for name, url in urls.items():
@@ -68,11 +68,11 @@ def get_currency(ru=False, uah=False, crypto=False, other=False):
 
     elif other:
         urls = {
-            "EUR/USD": 'https://finance.yahoo.com/quote/EURUSD=X?.tsrc=applewf',
-            "GBP/USD": 'https://finance.yahoo.com/quote/GBPUSD=X?.tsrc=applewf',
-            "CHF/USD": 'https://finance.yahoo.com/quote/CHFUSD=X?.tsrc=applewf',
-            "JPY/USD": 'https://finance.yahoo.com/quote/JPYUSD=X?.tsrc=applewf',
-            "CNY/USD": 'https://finance.yahoo.com/quote/CNYUSD=X?.tsrc=applewf',
+            "EUR/USD": 'https://query1.finance.yahoo.com/v8/finance/chart/EURUSD=X?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
+            "GBP/USD": 'https://query1.finance.yahoo.com/v8/finance/chart/GBPUSD=X?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
+            "CHF/USD": 'https://query1.finance.yahoo.com/v8/finance/chart/CHFUSD=X?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
+            "JPY/USD": 'https://query1.finance.yahoo.com/v8/finance/chart/JPYUSD=X?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
+            "CNY/USD": 'https://query1.finance.yahoo.com/v8/finance/chart/CNYUSD=X?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
         }
 
         for name, url in urls.items():
