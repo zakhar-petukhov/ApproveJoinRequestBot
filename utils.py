@@ -1,6 +1,5 @@
 import json
 import os
-import platform
 from datetime import datetime, timedelta
 from multiprocessing.pool import ThreadPool
 
@@ -8,7 +7,6 @@ import jsonpickle
 import requests
 from bs4 import BeautifulSoup
 from cachetools import TTLCache
-from selenium import webdriver
 from telethon import Button, TelegramClient
 
 import config
@@ -33,7 +31,7 @@ def get_currency(ru=False, uah=False, crypto=False, other=False):
         for name, url in urls.items():
             item = cache_data.get(f"{name}/UAH", None)
             if item is None:
-                _, price, change = parse_body(url, name)
+                _, price, change = parse_body(url, name, headers)
                 if name == "USD":
                     line = f"🇺🇸 USD/UAH **{price}** __{change}__"
                     list_currency.append(line)
@@ -55,7 +53,7 @@ def get_currency(ru=False, uah=False, crypto=False, other=False):
         for name, url in urls.items():
             item = cache_data.get(f"{name}/RUB", None)
             if item is None:
-                _, price, change = parse_body(url, name)
+                _, price, change = parse_body(url, name, headers)
                 if name == "USD":
                     line = f"🇺🇸 USD/RUB **{price}** __{change}__"
                     list_currency.append(line)
@@ -80,7 +78,7 @@ def get_currency(ru=False, uah=False, crypto=False, other=False):
         for name, url in urls.items():
             item = cache_data.get(url, None)
             if item is None:
-                _, price, change = parse_body(url, name)
+                _, price, change = parse_body(url, name, headers)
                 line = ""
 
                 if name == "EUR/USD":
@@ -108,28 +106,28 @@ def get_currency(ru=False, uah=False, crypto=False, other=False):
         pool = ThreadPool(processes=1)
 
         urls = {
-            "Bitcoin USD": 'https://finance.yahoo.com/quote/BTC-USD?p=BTC-USD&.tsrc=fin-srch',
-            "Ethereum USD": 'https://finance.yahoo.com/quote/ETH-USD?p=ETH-USD&.tsrc=fin-srch',
+            "Bitcoin USD": 'https://query1.finance.yahoo.com/v8/finance/chart/BTC-USD?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
+            "Ethereum USD": 'https://query1.finance.yahoo.com/v8/finance/chart/ETH-USD?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
             "USDT": 'https://www.bestchange.net/ruble-cash-to-tether-trc20.html',
-            "Dogecoin USD": 'https://finance.yahoo.com/quote/DOGE-USD?p=DOGE-USD&.tsrc=fin-srch',
-            "Terra USD": 'https://finance.yahoo.com/quote/UST-USD?p=UST-USD&.tsrc=fin-srch',
-            "GMT": 'https://finance.yahoo.com/quote/GMT3-USD?p=GMT3-USD&.tsrc=fin-srch',
-            "Solana": 'https://finance.yahoo.com/quote/SOL-USD?p=SOL-USD&.tsrc=fin-srch',
-            "GST": 'https://finance.yahoo.com/quote/GST2-USD?p=GST2-USD&.tsrc=fin-srch',
-            "BNB": 'https://finance.yahoo.com/quote/BNB-USD?p=BNB-USD&.tsrc=fin-srch ',
-            "GST_BSC": 'https://finance.yahoo.com/quote/GST3-USD?p=GST3-USD&.tsrc=fin-srch',
+            "Dogecoin USD": 'https://query1.finance.yahoo.com/v8/finance/chart/DOGE-USD?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
+            "Terra USD": 'https://query1.finance.yahoo.com/v8/finance/chart/UST-USD?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
+            "GMT": 'https://query1.finance.yahoo.com/v8/finance/chart/GMT3-USD?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
+            "Solana": 'https://query1.finance.yahoo.com/v8/finance/chart/SOL-USD?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
+            "GST": 'https://query1.finance.yahoo.com/v8/finance/chart/GST2-USD?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
+            "BNB": 'https://query1.finance.yahoo.com/v8/finance/chart/BNB-USD?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
+            "GST_BSC": 'https://query1.finance.yahoo.com/v8/finance/chart/GST3-USD?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
         }
 
         workers = []
 
         for name, url in urls.items():
             item = cache_data.get(name, None)
-            if item is None or "Нет данных" in item:
+            if item is None:
                 cache_data["send_msg"] = True
                 if name == "USDT":
                     workers.append(pool.apply_async(parse_body_USDT, (url, name, headers)))
                 else:
-                    workers.append(pool.apply_async(parse_body, (url, name)))
+                    workers.append(pool.apply_async(parse_body, (url, name, headers)))
 
             else:
                 list_currency.append(item)
@@ -166,32 +164,15 @@ def parse_body_USDT(url, name, headers):
     return name, price, 0
 
 
-def parse_body(url, name):
-    my_os = platform.system()
-    driver_path = r"./chromedriver_linux"
-    if my_os == "Darwin":
-        driver_path = r"./chromedriver_mac"
+def parse_body(url, name, headers):
+    request = requests.get(url, headers=headers)
+    data = request.json()
 
-    options = webdriver.ChromeOptions()
-    options.add_argument('headless')
+    chart_previous_close = round(data['chart']['result'][0]['meta']['chartPreviousClose'], 4)
+    regular_market_price = round(data['chart']['result'][0]['meta']['regularMarketPrice'], 4)
+    percent = round((regular_market_price / chart_previous_close - 1) * 100, 2)
 
-    driver = webdriver.Chrome(executable_path=driver_path, options=options)
-
-    driver.get(url)
-
-    soup = BeautifulSoup(driver.page_source, 'html.parser')
-    price = -100
-    change = -100
-    try:
-        price = soup.find("fin-streamer", {"data-field": "regularMarketPrice", "data-test": "qsp-price"}).text
-        change = soup.find("fin-streamer", {"data-field": "regularMarketChangePercent",
-                                            "class": "Fw(500) Pstart(8px) Fz(24px)"}).text
-    except Exception as e:
-        print(e)
-
-    driver.close()
-
-    return name, price, change
+    return name, regular_market_price, f"({f'+{percent}' if percent > 0 else percent}%)"
 
 
 def get_or_create_user(who):
