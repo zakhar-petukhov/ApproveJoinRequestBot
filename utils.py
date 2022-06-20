@@ -1,7 +1,6 @@
 import json
 import os
 from datetime import datetime, timedelta
-from multiprocessing.pool import ThreadPool
 
 import jsonpickle
 import requests
@@ -10,7 +9,7 @@ from cachetools import TTLCache
 from telethon import Button, TelegramClient
 
 import config
-from models import User
+from models import User, Price
 
 cache_data = TTLCache(maxsize=50000, ttl=timedelta(minutes=7), timer=datetime.now)
 
@@ -103,8 +102,6 @@ def get_currency(ru=False, uah=False, crypto=False, other=False):
                 list_currency.append(item)
 
     elif crypto:
-        pool = ThreadPool(processes=1)
-
         urls = {
             "Bitcoin USD": 'https://query1.finance.yahoo.com/v8/finance/chart/BTC-USD?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
             "Ethereum USD": 'https://query1.finance.yahoo.com/v8/finance/chart/ETH-USD?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
@@ -118,34 +115,42 @@ def get_currency(ru=False, uah=False, crypto=False, other=False):
             "GST_BSC": 'https://query1.finance.yahoo.com/v8/finance/chart/GST3-USD?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
         }
 
-        workers = []
-
         for name, url in urls.items():
             item = cache_data.get(name, None)
-            if item is None:
+            if item is None or "Нет данных" in item:
                 cache_data["send_msg"] = True
                 if name == "USDT":
-                    workers.append(pool.apply_async(parse_body_USDT, (url, name, headers)))
+                    name, price, change = parse_body_USDT(url, name, headers)
                 else:
-                    workers.append(pool.apply_async(parse_body, (url, name, headers)))
+                    name, price, change = parse_body(url, name, headers)
+
+                if price == -100 or change == -100:
+                    value = Price.select().where(Price.name == name).dicts()
+                    if value.exists():
+                        value = value[0]
+                        price = value["price"]
+                        change = value["change"]
+
+                    else:
+                        price = "Нет данных о цене"
+                        change = "Нет данных об изменении"
+                else:
+                    price_value = Price.get_or_none(name=name)
+                    if price_value is None:
+                        Price.create(name=name, price=price, change=change)
+                    else:
+                        Price.update(price=price, change=change).where(Price.name == name).execute()
+
+                if name == "USDT":
+                    line = f"🔹 USDT: **{price}** __(лучший курс, по которому возможно купить)__"
+                else:
+                    line = f"🔹 {name} **{price}** __{change}__"
+
+                cache_data[name] = line
+                list_currency.append(line)
 
             else:
                 list_currency.append(item)
-
-        for worker in workers:
-            name, price, change = worker.get()
-            if price == -100:
-                price = "Нет данных о цене"
-            if change == -100:
-                change = "Нет данных об изменении"
-
-            if name == "USDT":
-                line = f"🔹 USDT: **{price}** __(лучший курс, по которому возможно купить)__"
-            else:
-                line = f"🔹 {name} **{price}** __{change}__"
-
-            cache_data[name] = line
-            list_currency.append(line)
 
     return '\n'.join(list_currency) + '\n\nАктуальные курсы: @bestchangenanbot'
 
@@ -168,9 +173,12 @@ def parse_body(url, name, headers):
     request = requests.get(url, headers=headers)
     data = request.json()
 
-    chart_previous_close = round(data['chart']['result'][0]['meta']['chartPreviousClose'], 4)
-    regular_market_price = round(data['chart']['result'][0]['meta']['regularMarketPrice'], 4)
-    percent = round((regular_market_price / chart_previous_close - 1) * 100, 2)
+    try:
+        chart_previous_close = round(data['chart']['result'][0]['meta']['chartPreviousClose'], 4)
+        regular_market_price = round(data['chart']['result'][0]['meta']['regularMarketPrice'], 4)
+        percent = round((regular_market_price / chart_previous_close - 1) * 100, 2)
+    except:
+        return name, -100, -100
 
     return name, regular_market_price, f"({f'+{percent}' if percent > 0 else percent}%)"
 

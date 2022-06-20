@@ -1,7 +1,7 @@
 import logging
 
 from bot import bot
-from models import database, User
+from models import database, User, Price
 
 logging.basicConfig(
     format='%(asctime)s – %(levelname)s – %(message)s',
@@ -12,7 +12,7 @@ logging.basicConfig(
 
 def configure_database():
     database.connect()
-    database.create_tables([User])
+    database.create_tables([User, Price])
     database.close()
     logging.info('Database has been configured')
 
