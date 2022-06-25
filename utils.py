@@ -1,7 +1,9 @@
 import json
 import os
+import time
 from datetime import datetime, timedelta
 
+import asyncio
 import jsonpickle
 import requests
 from bs4 import BeautifulSoup
@@ -327,21 +329,9 @@ class Setting:
         else:
             keyboard = None
 
-        len_users = len(users)
-        mail_sent = 0
-
         if media == 'None':
             if preview is False:
-                for user in users:
-                    user_id = user['user_id']
-
-                    try:
-                        await bot.send_message(user_id, text, formatting_entities=entities, link_preview=web_preview,
-                                               buttons=keyboard)
-                        mail_sent += 1
-
-                    except:
-                        User.update(active=False).where(User.user_id == user_id).execute()
+                await send_async_send_message(users, text, entities, web_preview, keyboard, None)
             else:
                 await bot.send_message(admin_id, text, formatting_entities=entities, link_preview=web_preview,
                                        buttons=keyboard)
@@ -352,25 +342,9 @@ class Setting:
                 file = f.read()
 
                 if preview is False:
-                    for user in users:
-                        user_id = user['user_id']
-                        try:
-                            await bot.send_file(user_id, file, formatting_entities=entities, caption=text,
-                                                buttons=keyboard,
-                                                allow_cache=False)
-                            mail_sent += 1
-
-                        except:
-                            User.update(active=False).where(User.user_id == user_id).execute()
+                    await send_async_send_message(users, text, entities, web_preview, keyboard, file)
                 else:
                     await bot.send_file(admin_id, file, formatting_entities=entities, caption=text, buttons=keyboard)
-
-        if preview is False:
-            blocked_users = len_users - mail_sent
-
-            await bot.send_message(admin_id,
-                                   f'Сообщение было успешно отправлено:\n\nПользователи, получившие сообщение: <b>{mail_sent}</b>\nУдаленные пользователи, которые заблокировали бота: <b>{blocked_users}</b>',
-                                   parse_mode='html')
 
     async def download_file(self, file_id):
         """Download file from Telegram server"""
@@ -468,3 +442,34 @@ class Setting:
             self.add_url(url)
         else:
             self.change_url(url)
+
+
+async def send_async_send_message(users, text, entities, web_preview, keyboard, file):
+    tasks = []
+    count = 0
+
+    for user in users:
+        user_id = user["user_id"]
+        tasks.append(send_or_update_active(user_id, text, entities, web_preview, keyboard, file))
+        count += 1
+        if count > 28:
+            time.sleep(1)
+            count = 0
+            await asyncio.gather(*tasks)
+            tasks = []
+
+    if len(users) < 28:
+        await asyncio.gather(*tasks)
+
+
+async def send_or_update_active(user_id, text, entities, web_preview, keyboard, file):
+    try:
+        if file is not None:
+            await bot.send_file(user_id, file, formatting_entities=entities, caption=text,
+                                buttons=keyboard,
+                                allow_cache=False)
+        else:
+            await bot.send_message(user_id, text, formatting_entities=entities, link_preview=web_preview,
+                                   buttons=keyboard)
+    except:
+        User.update(active=False).where(User.user_id == user_id).execute()
