@@ -49,6 +49,7 @@ def get_currency(ru=False, uah=False, crypto=False, other=False):
         urls = {
             "USD": 'https://query1.finance.yahoo.com/v8/finance/chart/USDRUB=X?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
             "EUR": 'https://query1.finance.yahoo.com/v8/finance/chart/EURRUB=X?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
+            "TRY": 'https://query1.finance.yahoo.com/v8/finance/chart/TRYRUB.ME?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
         }
 
         for name, url in urls.items():
@@ -58,6 +59,11 @@ def get_currency(ru=False, uah=False, crypto=False, other=False):
                 if name == "USD":
                     line = f"🇺🇸 USD/RUB **{price}** __{change}__"
                     list_currency.append(line)
+
+                elif name == "TRY":
+                    line = f"🇹🇷 TRY/RUB **{price}** __{change}__"
+                    list_currency.append(line)
+
                 else:
                     line = f"🇪🇺 EUR/RUB **{price}** __{change}__"
                     list_currency.append(line)
