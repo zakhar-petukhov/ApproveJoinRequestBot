@@ -104,6 +104,7 @@ async def statistics(event):
 @bot.on(events.CallbackQuery(pattern="mailing"))
 async def mailing(event):
     s = Setting()
+    s.clear_mail()
     text = s.mail_text()
 
     keyboard = [

@@ -344,13 +344,22 @@ class Setting:
 
         else:
             path = media.split(':')[1]
-            with open(path, 'rb') as f:
-                file = f.read()
-
+            if 'photo:' not in media:
                 if preview is False:
-                    await send_async_send_message(users, text, entities, web_preview, keyboard, file)
+                    await send_async_send_message(users, text, entities, web_preview, keyboard, path)
                 else:
-                    await bot.send_file(admin_id, file, formatting_entities=entities, caption=text, buttons=keyboard)
+                    await bot.send_file(admin_id, path, formatting_entities=entities, caption=text,
+                                        buttons=keyboard)
+
+            else:
+                with open(path, 'rb') as f:
+                    file = f.read()
+
+                    if preview is False:
+                        await send_async_send_message(users, text, entities, web_preview, keyboard, file)
+                    else:
+                        await bot.send_file(admin_id, file, formatting_entities=entities, caption=text,
+                                            buttons=keyboard)
 
     async def download_file(self, file_id):
         """Download file from Telegram server"""
