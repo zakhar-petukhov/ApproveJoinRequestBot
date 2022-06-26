@@ -15,6 +15,9 @@ bot = TelegramClient('bot', config.API_ID, config.API_HASH).start(bot_token=conf
 
 @bot.on(events.NewMessage(pattern='/admin'))
 async def admin(event):
+    s = Setting()
+    s.clear_mail()
+
     who = event.sender_id
     if who in admins:
         keyboard = [
@@ -104,7 +107,6 @@ async def statistics(event):
 @bot.on(events.CallbackQuery(pattern="mailing"))
 async def mailing(event):
     s = Setting()
-    s.clear_mail()
     text = s.mail_text()
 
     keyboard = [
