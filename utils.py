@@ -119,6 +119,7 @@ def get_currency(ru=False, uah=False, crypto=False, other=False):
             "Dogecoin USD": 'https://query1.finance.yahoo.com/v8/finance/chart/DOGE-USD?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
             "GMT": 'https://query1.finance.yahoo.com/v8/finance/chart/GMT3-USD?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
             "Solana": 'https://query1.finance.yahoo.com/v8/finance/chart/SOL-USD?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
+            "TON": 'https://query1.finance.yahoo.com/v8/finance/chart/TONCOIN-USD?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
             "GST": 'https://query1.finance.yahoo.com/v8/finance/chart/GST2-USD?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
             "BNB": 'https://query1.finance.yahoo.com/v8/finance/chart/BNB-USD?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
             "GST_BSC": 'https://query1.finance.yahoo.com/v8/finance/chart/GST3-USD?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
