@@ -6,7 +6,8 @@ from telethon.tl.types import UpdateBotChatInviteRequester
 
 import config
 from models import User
-from utils import Setting, get_currency, get_or_create_user, cache_data
+from redis import redis
+from utils import Setting, get_currency, get_or_create_user, cache_data, time_until_end_of_day
 
 admins = [594400511, 1260871881, 149031756, 583525749, 952644352]
 
@@ -51,6 +52,12 @@ async def start(event):
 
 @bot.on(events.NewMessage(pattern="(?i)🇷🇺 RUB|🌍 Прочие|🇺🇦 UAH|💲 Crypto"))
 async def button_currency(event):
+    count = await redis.get("count_request")
+    if count is None:
+        await redis.set("count_request", 1, time_until_end_of_day())
+    else:
+        await redis.incr("count_request")
+
     user_id = event.message.peer_id.user_id
     button_text = event.raw_text
 
@@ -90,12 +97,19 @@ async def button_currency(event):
 
 @bot.on(events.CallbackQuery(pattern="statistics"))
 async def statistics(event):
+    count = await redis.get("count_request")
+    if count is None:
+        count = 0
+    else:
+        count = int(count.decode('utf-8'))
+
     total_users = User.select().count()
     active_users = User.select().where(User.active == True).count()
     text = f"""
 Вот немного статистики о боте:
 
 Количество пользователей: **{active_users}**
+Количество запросов в день: **{count}**
 """
     user_id = event.sender_id
     msg_id = event.message_id

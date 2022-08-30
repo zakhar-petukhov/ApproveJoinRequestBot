@@ -490,3 +490,9 @@ async def send_or_update_active(user_id, text, entities, web_preview, keyboard, 
                                    buttons=keyboard)
     except:
         User.update(active=False).where(User.user_id == user_id).execute()
+
+
+def time_until_end_of_day(dt=None):
+    if dt is None:
+        dt = datetime.now()
+    return ((24 - dt.hour - 1) * 60 * 60) + ((60 - dt.minute - 1) * 60) + (60 - dt.second)
