@@ -1,6 +1,5 @@
 import json
 import os
-import time
 from datetime import datetime, timedelta
 
 import asyncio
@@ -469,13 +468,13 @@ async def send_async_send_message(users, text, entities, web_preview, keyboard, 
         user_id = user["user_id"]
         tasks.append(send_or_update_active(user_id, text, entities, web_preview, keyboard, file))
         count += 1
-        if count > 28:
-            time.sleep(1)
+        if count > 10:
             count = 0
             await asyncio.gather(*tasks)
+            await asyncio.sleep(2)
             tasks = []
 
-    if len(users) < 28:
+    if len(tasks) > 0:
         await asyncio.gather(*tasks)
 
 

@@ -58,14 +58,7 @@ async def button_currency(event):
     else:
         await redis.incr("count_request")
 
-    user_id = event.message.peer_id.user_id
     button_text = event.raw_text
-
-    # try:
-    #     await bot.get_permissions(config.SUBSCRIBE_CHANNEL, user_id)
-    # except:
-    #     await event.respond("Для использования бота необходима подписка на @idei_biznes.")
-    #     return
 
     if button_text == "🇷🇺 RUB":
         text = f"""
