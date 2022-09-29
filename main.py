@@ -1,13 +1,8 @@
 import logging
 
-from bot import bot
-from models import database, User, Price
-
-logging.basicConfig(
-    format='%(asctime)s – %(levelname)s – %(message)s',
-    datefmt='%m/%d/%Y %I:%M:%S %p',
-    level=logging.INFO
-)
+from admin.admin import admin_panel
+from bot.bot import bot
+from db.models import database, User, Price
 
 
 def configure_database():
@@ -19,6 +14,7 @@ def configure_database():
 
 def main():
     configure_database()
+    admin_panel(bot)
     bot.run_until_disconnected()
 
 

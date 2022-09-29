@@ -1,7 +1,5 @@
 from peewee import Model, IntegerField, BooleanField, CharField, FloatField
-from playhouse.sqliteq import SqliteQueueDatabase
-
-database = SqliteQueueDatabase('db.sqlite3')
+from db.db import database
 
 
 class BaseModel(Model):

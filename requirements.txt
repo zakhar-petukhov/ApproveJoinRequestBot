@@ -13,4 +13,5 @@ requests==2.27.1
 rsa==4.8
 soupsieve==2.3.2.post1
 urllib3==1.26.9
+selenium-wire==4.6.5
 aioredis
