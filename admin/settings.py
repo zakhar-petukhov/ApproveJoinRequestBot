@@ -79,7 +79,7 @@ class Setting:
         else:
             path = media.split(':')[1]
             if preview is False:
-                await send_async_send_message(self.bot, users, text, entities, web_preview, keyboard, None)
+                await send_async_send_message(self.bot, users, text, entities, web_preview, keyboard, path)
 
             else:
                 await self.bot.send_file(admin_id, path, formatting_entities=entities, caption=text,

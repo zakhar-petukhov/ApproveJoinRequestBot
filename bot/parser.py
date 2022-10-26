@@ -47,6 +47,17 @@ Version/15.4 Safari/605.1.15'
 
         return name, regular_market_price, f"({f'+{percent}' if percent > 0 else percent}%)"
 
+    def parse_coingecko(self, name, url: str):
+        try:
+            request = requests.get(url, headers=self.headers)
+            data = request.json()
+            regular_market_price = round(data['the-open-network']['usd'], 4)
+
+        except:
+            return name, -100
+
+        return name, regular_market_price
+
     async def fetch(self, session, url, name):
         try:
             async with session.get(url) as response:

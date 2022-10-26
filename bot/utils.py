@@ -122,7 +122,7 @@ async def get_currency(ru=False, uah=False, crypto=False, other=False):
             "Dogecoin USD": 'https://query1.finance.yahoo.com/v8/finance/chart/DOGE-USD?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
             "GMT": 'https://query1.finance.yahoo.com/v8/finance/chart/GMT3-USD?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
             "Solana": 'https://query1.finance.yahoo.com/v8/finance/chart/SOL-USD?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
-            "TON": 'https://query1.finance.yahoo.com/v8/finance/chart/TONCOIN-USD?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
+            "TON": 'https://api.coingecko.com/api/v3/simple/price?ids=the-open-network&vs_currencies=USD',
             "GST": 'https://query1.finance.yahoo.com/v8/finance/chart/GST2-USD?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
             "BNB": 'https://query1.finance.yahoo.com/v8/finance/chart/BNB-USD?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
             "GST_BSC": 'https://query1.finance.yahoo.com/v8/finance/chart/GST3-USD?region=US&lang=en-US&includePrePost=false&interval=2m&useYfid=true&range=1d&corsDomain=finance.yahoo.com&.tsrc=finance',
@@ -136,6 +136,10 @@ async def get_currency(ru=False, uah=False, crypto=False, other=False):
 
                 if name == "USDT":
                     name, price = await parse.parse_bestchange(name, url)
+
+                elif name == "TON":
+                    name, price = parse.parse_coingecko(name, url)
+
                 else:
                     name, price, change = parse.parse_yahoo(name, url)
 
@@ -165,6 +169,9 @@ async def get_currency(ru=False, uah=False, crypto=False, other=False):
 
                 elif name == "Bitcoin USD":
                     line = f"🔸 {name} **{price}** __{change}__"
+
+                elif name == "TON":
+                    line = f"🔹 {name} **{price}**"
 
                 else:
                     line = f"🔹 {name} **{price}** __{change}__"
