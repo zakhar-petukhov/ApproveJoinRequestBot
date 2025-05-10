@@ -2,16 +2,17 @@ from telethon import Button, TelegramClient, events
 from telethon.tl.types import UpdateBotChatInviteRequester
 
 import config
-from redis import redis
-from bot.utils import get_currency, get_or_create_user, cache_data, time_until_end_of_day
+from bot.utils import get_currency, get_or_create_user
 
-bot = TelegramClient('bot', config.API_ID, config.API_HASH).start(bot_token=config.BOT_TOKEN)
+bot = TelegramClient('bot', config.API_ID, config.API_HASH)
+
+welcome_text = "Привет! Этот бот показывает актуальный курс фиатных валют и криптовалют."
 
 
 @bot.on(events.NewMessage(pattern='/start'))
 async def start(event):
     who = event.sender_id
-    get_or_create_user(who)
+    get_or_create_user(who)  # Ensure user is created or fetched
 
     keyboard = [
         [
@@ -23,54 +24,32 @@ async def start(event):
             Button.text("💲 Crypto", resize=True),
         ],
     ]
-    text = """
-Привет! Этот бот показывает актуальный курс фиатных валют и криптовалют.
-        """
-    await event.respond(text, buttons=keyboard)
-    raise events.StopPropagation
+
+    await event.respond(welcome_text, buttons=keyboard)
+    raise events.StopPropagation  # Stop further event propagation
 
 
 @bot.on(events.NewMessage(pattern="(?i)🇷🇺 RUB|🌍 Прочие|🇺🇦 UAH|💲 Crypto"))
 async def button_currency(event):
-    count = await redis.get("count_request")
-    if count is None:
-        await redis.set("count_request", 1, time_until_end_of_day())
-    else:
-        await redis.incr("count_request")
-
     button_text = event.raw_text
 
+    text = ""
     if button_text == "🇷🇺 RUB":
-        item = cache_data.get(f"send_msg/rus", None)
-        if item is None:
-            await event.respond("Собираю данные")
-
-        text = f"""
-🇷🇺 Российский рубль
-
-{await get_currency(ru=True)}
-    """
-        await event.respond(text)
-
+        text = f"🇷🇺 Российский рубль\n\n{await get_currency(ru=True)}"
     elif button_text == "🇺🇦 UAH":
-        text = f"""
-🇺🇦 Украинская гривна
-
-{await get_currency(uah=True)}
-    """
-        await event.respond(text)
-
+        text = f"🇺🇦 Украинская гривна\n\n{await get_currency(uah=True)}"
     elif button_text == "🌍 Прочие":
-        await event.respond(await get_currency(other=True))
-
+        text = await get_currency(other=True)
     elif button_text == "💲 Crypto":
-        item = cache_data.get(f"send_msg/crypto", None)
-        if item is None:
-            await event.respond("Собираю данные")
+        text = await get_currency(crypto=True)
 
-        await event.respond(await get_currency(crypto=True))
+    # Send collected data
+    if text == "":
+        return await event.respond("Не удалось собрать информацию")
 
-    raise events.StopPropagation
+    await event.respond(text)
+
+    raise events.StopPropagation  # Stop further event propagation
 
 
 @bot.on(events.ChatAction)
@@ -87,7 +66,5 @@ async def handler(event):
                 Button.text("💲 Crypto", resize=True),
             ],
         ]
-        get_or_create_user(user_id)
-        await bot.send_message(event.user_id,
-                               "Привет! Этот бот показывает актуальный курс фиатных валют и криптовалют.",
-                               buttons=keyboard)
+        await get_or_create_user(user_id)  # Ensure the new user is created or fetched
+        await bot.send_message(user_id, welcome_text, buttons=keyboard)

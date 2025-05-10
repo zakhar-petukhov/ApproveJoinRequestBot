@@ -7,7 +7,6 @@ from admin.settings import Setting
 from bot.bot import start
 from config import ADMINS_ID
 from db.models import User
-from redis import redis
 
 
 def admin_panel(bot):
@@ -21,18 +20,11 @@ def admin_panel(bot):
 
     @bot.on(events.CallbackQuery(pattern="statistics"))
     async def statistics(event):
-        count = await redis.get("count_request")
-        if count is None:
-            count = 0
-        else:
-            count = int(count.decode('utf-8'))
-
         active_users = User.select().where(User.active == True).count()
         text = f"""
 Вот немного статистики о боте:
 
 Количество пользователей: **{active_users}**
-Количество запросов в день: **{count}**
     """
         user_id = event.sender_id
         msg_id = event.message_id
